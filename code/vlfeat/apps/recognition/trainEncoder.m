@@ -67,7 +67,7 @@ opts.subdivisions = zeros(4,0) ;
 opts.readImageFn = @readImage ;
 opts.extractorFn = @getDenseSIFT ;
 opts.lite = false ;
-opts = vl_argparse(opts, varargin) ;
+%opts = vl_argparse(opts, varargin) ;
 
 for i = 1:numel(opts.layouts)
   t = sscanf(opts.layouts{i},'%dx%d') ;
@@ -129,7 +129,7 @@ encoder.renormalize = opts.renormalize ;
 encoder.geometricExtension = opts.geometricExtension ;
 
 %% Step 0: obtain sample image descriptors
-numImages = numel(images) ;
+numImages = numel(images) 
 numDescrsPerImage = ceil(opts.numWords * opts.numSamplesPerWord / numImages) ;
 parfor i = 1:numImages
   fprintf('%s: reading: %s\n', mfilename, images{i}) ;

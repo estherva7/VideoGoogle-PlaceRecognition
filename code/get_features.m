@@ -1,6 +1,6 @@
 function features_pos = get_features(train_path, feature_params)
 
-image_files = dir( fullfile( train_path, '*.jpg') );
+image_files = dir( fullfile( train_path, '*.png') );
 num_images = length(image_files);
 
 % For each image, extract SA and MS regions (and track them to keep the ones that survive every three frames)
@@ -17,9 +17,9 @@ num_images = length(image_files);
 
 features.SA = []; %Should return RSAx128 vector, where RSA is the total number of regions kept using SA
 features.MS = []; %Should return RMSx128 vector, where RMS is the total number of regions kept using MS
-for im = 1: num_images
-    img = imread(image_files(im).name);
-    img = im2single(img);
-    hog_features = vl_hog(img, feature_params.hog_cell_size,'variant', 'dalaltriggs'); %Change HOG features by SIFT features
-    features.SA = [features.SA; hog_features];
+for im = 1: 3: num_images
+    regionsMS = trackMSregions(train_path, image_files, im, feature_params);
+    SIFT_MS = extractAverageSIFT(train_path, image_files, im, regionsMS, feature_params);
+%     [fl,dl] = vl_sift(im2single(img));
+%     features.SA = [features.SA; hog_feature];
 end
