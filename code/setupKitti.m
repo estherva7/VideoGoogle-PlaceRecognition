@@ -1,28 +1,28 @@
 function data = setupKitti(kitti_path)
 
-    limages = dir(strcat(kitti_path,'images/left*.png')); 
-	 rimages = dir(strcat(kitti_path,'images/right*.png'));
-    
-	 n = size(limages,1);
+    images = dir(strcat(kitti_path,'\*_left.jpg')); 
+	
+    %kitti_path = 'C:\Users\shuzhe\Desktop\Computer Vision Final\malaga-urban-dataset-extract-07_short_loopclosure\malaga-urban-dataset-extract-07\malaga-urban-dataset-extract-07_rectified_800x600_Images\';
+	 n = size(images,1);
 
-    nFr = 100; %Number of frames per place
+    nFr = 21; %Number of frames per place
     nPl = 3; %Number of training frames per place
     nTr = 0; %Counter of training images
 
     offset = round(nFr/4);
-    
-	 for ii = 1: 100: n
+    %training
+	 for ii = 1: nFr: 1743
         for jj = 1:nPl
             if (ii + offset)+round(((nFr-offset)/nPl)*jj) <= n
                 nTr = nTr + 1;
-                data.train{nTr} = strcat(kitti_path,'images/',limages((ii + offset)+round(((nFr-offset)/nPl)*jj)).name);
+                data.train{nTr} = strcat(kitti_path,images((ii + offset)+round(((nFr-offset)/nPl)*jj)).name);
                 data.ytrain(nTr) = ceil(ii/nFr);
             end
         end
     end
 
-    for ii = 1:n
-        data.test{ii} = strcat(cityblock_path,'images/',rimages(ii).name);
+    for ii = 1744:n
+        data.test{ii} = strcat(kitti_path,images(ii).name);
         data.ytest(ii) = ceil(ii/nFr);
     end
 end
