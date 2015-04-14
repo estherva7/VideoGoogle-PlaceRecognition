@@ -6,7 +6,8 @@ addpath(genpath(vlfeat_path));
 addpath(genpath(project_path));
 run('vl_setup.m');
 
-opts.dataset = 'hw4' ;
+%opts.dataset = 'hw4' ;
+opts.dataset = 'kitti';
 opts.prefix = 'bovw' ;
 opts.encoderParams = {'type', 'bovw'} ;
 opts.seed = 1 ;
@@ -18,7 +19,11 @@ opts.dataDir = 'data';
 if strcmp(opts.dataset, 'hw4') == 1
    dataset_path = '/Users/esthervasiete/Dropbox/ComputerVision/Homework4/cityblock/';
    data = setupCityblock(dataset_path);
+else if strcmp(opts.dataset, 'kitti') == 1
+	dataset_path = 'kitti dataset path'
+	data = setupKitti(dataset_path);
 end
+
 
 encoder = trainEncoder(data.train, opts.encoderParams{:});
 descrs_train = encodeImage(encoder, data.train) ;
@@ -62,7 +67,7 @@ for c = 1: numel(class_labels)
     
     [tpr{c},tnr{c}] = vl_roc(ytest, scores{c});
     ap(c) = info.ap ;
-    ap11(c) = info.ap_interp_11 ; %What's this?
+    ap11(c) = info.ap_interp_11 ; %11-pts interpolated avr precision
     plot(tnr{c},tpr{c}); drawnow
     pause(0.5);
 end
