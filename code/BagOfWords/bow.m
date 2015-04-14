@@ -20,7 +20,8 @@ if strcmp(opts.dataset, 'hw4') == 1
    dataset_path = '/Users/esthervasiete/Dropbox/ComputerVision/Homework4/cityblock/';
    data = setupCityblock(dataset_path);
 else if strcmp(opts.dataset, 'kitti') == 1
-	dataset_path = 'kitti dataset path'
+    %path just for shuzhe, should be edited for different computers
+	dataset_path = 'C:\Users\shuzhe\Desktop\Computer Vision Final\malaga-urban-dataset-extract-07_short_loopclosure\malaga-urban-dataset-extract-07\malaga-urban-dataset-extract-07_rectified_800x600_Images\';                    %'kitti dataset path'
 	data = setupKitti(dataset_path);
 end
 
