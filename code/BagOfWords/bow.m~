@@ -17,46 +17,87 @@ opts.dataDir = 'data';
 opts.cacheDir = '/Users/esthervasiete/Dropbox/ComputerVision/Project-PlaceRecognition/data/cache';
 
 if strcmp(opts.dataset, 'hw4') == 1
-   dataset_path =  '/Users/esthervasiete/Dropbox/ComputerVision/Project-PlaceRecognition/data/hw4/';
-   imdb = dir(dataset_path); 
+   dataset_path = '/Users/esthervasiete/Dropbox/ComputerVision/Homework4/cityblock/';
+   data = setupCityblock(dataset_path);
 end
 
-for ii = 3: length(imdb)
-    train_images{ii-2} = fullfile(dataset_path, imdb(ii).name);
-end
+encoder = trainEncoder(data.train, opts.encoderParams{:});
+descrs_train = encodeImage(encoder, data.train) ;
+descrs_test = encodeImage(encoder, data.test) ;
 
-numTrain = 10;
-if opts.lite, numTrain = 10 ; end
 
-encoder = trainEncoder(train_images, opts.encoderParams{:});
-descrs = encodeImage(encoder, train_images, 'cacheDir', opts.cacheDir) ;
-
-% apply kernel maps
+% Apply kernel maps - Learn what this is
 switch opts.kernel
   case 'linear'
   case 'hell'
-    descrs = sign(descrs) .* sqrt(abs(descrs)) ;
+    descrs_train = sign(descrs_train) .* sqrt(abs(descrs_train)) ;
+    descrs_test = sign(descrs_test) .* sqrt(abs(descrs_test)) ;
   case 'chi2'
-    descrs = vl_homkermap(descrs,1,'kchi2') ;
+    descrs_train = vl_homkermap(descrs_train,1,'kchi2') ;
+    descrs_test = vl_homkermap(descrs_test,1,'kchi2') ;
   otherwise
     assert(false) ;
 end
-descrs = bsxfun(@times, descrs, 1./sqrt(sum(descrs.^2))) ;
+descrs_train = bsxfun(@times, descrs_train, 1./sqrt(sum(descrs_train.^2))) ;
+descrs_test = bsxfun(@times, descrs_test, 1./sqrt(sum(descrs_test.^2))) ;
 
 % SVM
-lambda = 1 / (opts.C*numel(train)) ;
+lambda = 1 / (opts.C*numel(data.train)) ;
 par = {'Solver', 'sdca', 'Verbose', ...
        'BiasMultiplier', 1, ...
        'Epsilon', 0.001, ...
-       'MaxNumIterations', 100 * numel(train)} ;
-
-for c = 1:numel(class_labels)
-  [w{c},b{c}] = vl_svmtrain(descrs(:,train), y(train), lambda, par{:}) ;
-  scores{c} = w{c}' * descrs + b{c} ;
-
-  [~,~,info] = vl_pr(y(test), scores{c}(test)) ;
-  ap(c) = info.ap ;
-  ap11(c) = info.ap_interp_11 ;
-  fprintf('class %s AP %.2f; AP 11 %.2f\n', imdb.meta.classes{classRange(c)}, ...
-          ap(c) * 100, ap11(c)*100) ;
+       'MaxNumIterations', 100 * numel(data.train)} ;
+class_labels = unique(data.ytrain);
+y = data.ytrain;
+ytest = data.ytest;
+for c = 1: numel(class_labels)
+    c
+    y(find(data.ytrain == c)) = ones(1,numel(find(data.ytrain == c)));
+    y(find(data.ytrain ~= c)) = -1 * ones(1,numel(find(data.ytrain ~= c)));
+    [w{c},b{c}] = vl_svmtrain(descrs_train, y, lambda, par{:}) ;
+    scores{c} = w{c}' * descrs_test + b{c} ;
+    
+    ytest(find(data.ytest == c)) = ones(1,numel(find(data.ytest == c)));
+    ytest(find(data.ytest ~= c)) = -1 * ones(1,numel(find(data.ytest ~= c)));
+    [~,~,info] = vl_pr(data.ytest, scores{c}) ;
+    ap(c) = info.ap ;
+    ap11(c) = info.ap_interp_11 ;
 end
+scores = cat(1,scores{:}) ;
+
+% confusion matrix (can be computed only if each image has only one label)
+if isfield(imdb.images, 'class')
+  [~,preds] = max(scores, [], 1) ;
+  confusion = zeros(numClasses) ;
+  for c = 1:numClasses
+    sel = find(imdb.images.class == classRange(c) & imdb.images.set == 3) ;
+    tmp = accumarray(preds(sel)', 1, [numClasses 1]) ;
+    tmp = tmp / max(sum(tmp),1e-10) ;
+    confusion(c,:) = tmp(:)' ;
+  end
+else
+  confusion = NaN ;
+end
+
+% figures
+meanAccuracy = sprintf('mean accuracy: %f\n', mean(diag(confusion)));
+mAP = sprintf('mAP: %.2f %%; mAP 11: %.2f', mean(ap) * 100, mean(ap11) * 100) ;
+
+figure(1) ; clf ;
+imagesc(confusion) ; axis square ;
+title([opts.prefix ' - ' meanAccuracy]) ;
+vl_printsize(1) ;
+print('-dpdf', fullfile(opts.resultDir, 'result-confusion.pdf')) ;
+print('-djpeg', fullfile(opts.resultDir, 'result-confusion.jpg')) ;
+
+figure(2) ; clf ; bar(ap * 100) ;
+title([opts.prefix ' - ' mAP]) ;
+ylabel('AP %%') ; xlabel('class') ;
+grid on ;
+vl_printsize(1) ;
+ylim([0 100]) ;
+print('-dpdf', fullfile(opts.resultDir,'result-ap.pdf')) ;
+
+disp(meanAccuracy) ;
+disp(mAP) ;
+diary off ;
