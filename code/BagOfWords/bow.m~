@@ -1,4 +1,4 @@
-% PLACE RECOGNITION
+%BAG OF WORDS
 clear all; close all;
 vlfeat_path = '/Users/esthervasiete/Dropbox/MatlabToolboxes/vlfeat-0.9.20/';
 project_path = '/Users/esthervasiete/Dropbox/ComputerVision/Project-PlaceRecognition/';
@@ -14,7 +14,7 @@ opts.lite = false ;
 opts.C = 1 ; 
 opts.kernel = 'linear' ; % We could probably just stick to linear
 opts.dataDir = 'data';
-opts.featureExtractionMethod = 'cnn'; % Options: 'bow', 'cnn'
+opts.featureExtractionMethod = 'bow'; % Options: 'bow', 'cnn'
 
 %Update paths!!
 if strcmp(opts.dataset, 'hw4') == 1
@@ -84,10 +84,11 @@ for c = 1: numel(class_labels)
         pause(0.5);
     end
 end
-% Average ROC
+% Average ROC - Is this correct?
 scores = cat(1,scores{:}) ;
 labels = cat(1, test_labels{:});
-vl_roc(labels, scores, 'Plot', 'tptn');
+[tpr_,tnr_] = vl_roc(labels, scores);
+plot(tnr_,tpr_); drawnow
 
 
 % confusion matrix (can be computed only if each image has only one label)
@@ -105,12 +106,12 @@ end
 meanAccuracy = sprintf('mean accuracy: %f\n', mean(diag(confusion)));
 mAP = sprintf('mAP: %.2f %%; mAP 11: %.2f', mean(ap) * 100, mean(ap11) * 100) ;
 
-figure(2) ; clf ;
+figure(1) ; clf ;
 imagesc(confusion) ; axis square ;
 title([opts.prefix ' - ' meanAccuracy]) ;
 vl_printsize(1) ;
 
-figure(3) ; clf ; bar(ap * 100) ;
+figure(2) ; clf ; bar(ap * 100) ;
 title([opts.prefix ' - ' mAP]) ;
 ylabel('AP %%') ; xlabel('class') ;
 grid on ;
