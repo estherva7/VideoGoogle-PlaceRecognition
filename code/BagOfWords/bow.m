@@ -84,7 +84,7 @@ for c = 1: numel(class_labels)
         pause(0.5);
     end
 end
-% Average ROC
+% Average ROC - Is this good??
 scores = cat(1,scores{:}) ;
 labels = cat(1, test_labels{:});
 vl_roc(labels, scores, 'Plot', 'tptn');

@@ -1,5 +1,6 @@
 function data = setupKitti(kitti_path)
-
+    
+    label = [1707 1724 1743	1762 1782 1798 1814 1830 1849 1860 1880 1896 1914 1932 1950 1968 1990 2015 2040	2060 2082 2102 2126 2146 2166 2183 2202	2222 2242];
     images = dir(strcat(kitti_path,'*_left.jpg')); 
 	n = size(images,1);
 
@@ -19,9 +20,9 @@ function data = setupKitti(kitti_path)
         end
     end
     nTest = 0;
-    for ii = 1707:n
+    for ii = label
         nTest = nTest + 1;
         data.test{nTest} = strcat(kitti_path,images(ii).name);
-        data.ytest(nTest) = ceil((ii-1706)/nFr);
+        data.ytest(nTest) = ceil((ii-1706));
     end
 end
